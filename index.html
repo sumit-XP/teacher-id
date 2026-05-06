@@ -281,7 +281,7 @@
     <header>
       <div>
         <h1>Teacher Details Form</h1>
-        <p class="subtitle">Collect teacher identification details and send each submission to a connected Google Sheet.</p>
+        <p class="subtitle">Collect teacher identification details and submit them securely.</p>
       </div>
     </header>
 
@@ -343,7 +343,7 @@
           <div class="grid">
             <label>
               Teacher photo
-              <span class="hint">JPG or PNG is best. The connected Apps Script stores the image in Google Drive and saves the image link in the Sheet.</span>
+              <span class="hint">JPG or PNG is best.</span>
               <input id="photo" name="photo" type="file" accept="image/*">
             </label>
             <div class="photo-preview" id="photoPreview">No image selected</div>
@@ -371,7 +371,7 @@
         <div class="actions">
           <p class="status" id="statusText"></p>
           <button class="btn danger" type="reset">Clear Form</button>
-          <button class="btn success" type="submit">Submit To Google Sheet</button>
+          <button class="btn success" type="submit">Submit Details</button>
         </div>
       </form>
     </div>
@@ -456,11 +456,11 @@
 
       const endpoint = GOOGLE_SHEET_WEB_APP_URL.trim();
       if (!endpoint) {
-        setStatus("This form is not connected to Google Sheets yet. Add the Web App URL in index.html.", "error");
+        setStatus("This form is not connected yet. Please contact the administrator.", "error");
         return;
       }
 
-      setStatus("Submitting details to Google Sheet...", "");
+      setStatus("Submitting details...", "");
 
       try {
         await fetch(endpoint, {
@@ -474,7 +474,7 @@
 
         form.reset();
         window.setTimeout(() => {
-          setStatus("Submitted. Check your Google Sheet for the new row.", "success");
+          setStatus("Submitted successfully.", "success");
         }, 0);
       } catch (error) {
         setStatus("Submission failed. Check the Web App URL and deployment access.", "error");
