@@ -76,14 +76,10 @@
     }
 
     .layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 340px;
-      gap: 24px;
       margin-top: 24px;
     }
 
-    form,
-    .panel {
+    form {
       background: var(--paper);
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -94,11 +90,6 @@
       display: grid;
       gap: 18px;
       padding: 20px;
-    }
-
-    .panel {
-      align-self: start;
-      padding: 18px;
     }
 
     .section {
@@ -237,29 +228,13 @@
     }
 
     .actions,
-    .link-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
     .actions {
       justify-content: flex-end;
       padding-top: 4px;
     }
 
-    .link-actions a {
-      display: inline-flex;
-      align-items: center;
-      min-height: 38px;
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      padding: 8px 11px;
-      background: #fbfcfe;
-      text-decoration: none;
-    }
-
     .status {
+      flex: 1 1 100%;
       margin: 0;
       min-height: 22px;
       color: var(--muted);
@@ -276,27 +251,6 @@
       font-weight: 700;
     }
 
-    .panel p,
-    .panel ol {
-      color: var(--muted);
-      font-size: 0.9rem;
-    }
-
-    .panel ol {
-      padding-left: 20px;
-    }
-
-    .panel code {
-      color: var(--ink);
-      font-size: 0.86rem;
-    }
-
-    @media (max-width: 900px) {
-      .layout {
-        grid-template-columns: 1fr;
-      }
-    }
-
     @media (max-width: 680px) {
       .app-shell {
         padding: 14px;
@@ -307,8 +261,7 @@
         flex-direction: column;
       }
 
-      form,
-      .panel {
+      form {
         padding: 14px;
       }
 
@@ -316,8 +269,7 @@
         grid-template-columns: 1fr;
       }
 
-      .actions .btn,
-      .link-actions a {
+      .actions .btn {
         flex: 1 1 150px;
         justify-content: center;
       }
@@ -416,46 +368,19 @@
           </div>
         </section>
 
-        <section class="section" aria-labelledby="sheet-section">
-          <h2 id="sheet-section">Google Sheet Link</h2>
-          <div class="grid">
-            <label class="full">
-              Apps Script Web App URL
-              <span class="hint">Paste the deployed Web App URL from Google Apps Script. It is saved in this browser.</span>
-              <input id="sheetWebAppUrl" name="sheetWebAppUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec">
-            </label>
-          </div>
-          <div class="link-actions">
-            <a href="https://sheets.new" target="_blank" rel="noopener">Create Google Sheet</a>
-            <a href="https://script.google.com/home" target="_blank" rel="noopener">Open Apps Script</a>
-          </div>
-          <p class="status" id="statusText"></p>
-        </section>
-
         <div class="actions">
+          <p class="status" id="statusText"></p>
           <button class="btn danger" type="reset">Clear Form</button>
           <button class="btn success" type="submit">Submit To Google Sheet</button>
         </div>
       </form>
-
-      <aside class="panel">
-        <h2>Sheet Setup</h2>
-        <p>Use the helper file in this folder to connect the form to Google Sheets.</p>
-        <ol>
-          <li>Open <a href="https://sheets.new" target="_blank" rel="noopener">sheets.new</a> and create a blank Sheet.</li>
-          <li>Go to Extensions, then Apps Script.</li>
-          <li>Paste the code from <code>google-apps-script.gs</code>.</li>
-          <li>Deploy as a Web App with access set to anyone with the link.</li>
-          <li>Paste the Web App URL into this form.</li>
-        </ol>
-      </aside>
     </div>
   </div>
 
   <script>
+    const GOOGLE_SHEET_WEB_APP_URL = "";
     const form = document.querySelector("#teacherForm");
     const statusText = document.querySelector("#statusText");
-    const endpointKey = "teacher-id-google-sheet-endpoint";
     const fields = [
       "fullName",
       "mobile",
@@ -510,19 +435,12 @@
       reader.readAsDataURL(file);
     }
 
-    form.elements.sheetWebAppUrl.value = localStorage.getItem(endpointKey) || "";
-
-    form.elements.sheetWebAppUrl.addEventListener("input", () => {
-      localStorage.setItem(endpointKey, form.elements.sheetWebAppUrl.value.trim());
-    });
-
     form.elements.photo.addEventListener("change", (event) => {
       previewPhoto(event.target.files[0]);
     });
 
     form.addEventListener("reset", () => {
       window.setTimeout(() => {
-        form.elements.sheetWebAppUrl.value = localStorage.getItem(endpointKey) || "";
         photoPayload = null;
         form.elements.photo.value = "";
         document.querySelector("#photoPreview").textContent = "No image selected";
@@ -536,13 +454,12 @@
         return;
       }
 
-      const endpoint = form.elements.sheetWebAppUrl.value.trim();
+      const endpoint = GOOGLE_SHEET_WEB_APP_URL.trim();
       if (!endpoint) {
-        setStatus("Paste your Google Apps Script Web App URL before submitting.", "error");
+        setStatus("This form is not connected to Google Sheets yet. Add the Web App URL in index.html.", "error");
         return;
       }
 
-      localStorage.setItem(endpointKey, endpoint);
       setStatus("Submitting details to Google Sheet...", "");
 
       try {
