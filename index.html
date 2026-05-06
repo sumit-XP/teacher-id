@@ -227,8 +227,10 @@
       outline-offset: 2px;
     }
 
-    .actions,
     .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
       justify-content: flex-end;
       padding-top: 4px;
     }
@@ -249,6 +251,103 @@
     .status.error {
       color: var(--danger);
       font-weight: 700;
+    }
+
+    .success-screen {
+      display: none;
+      place-items: center;
+      min-height: 520px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 32px 20px;
+      text-align: center;
+    }
+
+    .success-screen.active {
+      display: grid;
+    }
+
+    .success-card {
+      display: grid;
+      justify-items: center;
+      gap: 14px;
+      width: min(480px, 100%);
+    }
+
+    .success-mark {
+      display: grid;
+      place-items: center;
+      width: 74px;
+      height: 74px;
+      border-radius: 50%;
+      background: #e7f7f2;
+      color: var(--teal);
+      font-size: 2.5rem;
+      font-weight: 800;
+    }
+
+    .success-card h2 {
+      margin-top: 6px;
+      font-size: 1.55rem;
+    }
+
+    .success-card p {
+      margin: 0 0 8px;
+      color: var(--muted);
+    }
+
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      background: rgba(244, 247, 251, 0.82);
+      backdrop-filter: blur(4px);
+    }
+
+    .loading-overlay.active {
+      display: grid;
+    }
+
+    .loading-card {
+      display: grid;
+      justify-items: center;
+      gap: 14px;
+      width: min(320px, 100%);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      text-align: center;
+    }
+
+    .spinner {
+      width: 46px;
+      height: 46px;
+      border: 4px solid #dce6ef;
+      border-top-color: var(--teal);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .loading-card strong {
+      font-size: 1rem;
+    }
+
+    .loading-card span {
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
     }
 
     @media (max-width: 680px) {
@@ -371,9 +470,26 @@
         <div class="actions">
           <p class="status" id="statusText"></p>
           <button class="btn danger" type="reset">Clear Form</button>
-          <button class="btn success" type="submit">Submit Details</button>
+          <button class="btn success" type="submit" id="submitButton">Submit Details</button>
         </div>
       </form>
+
+      <section class="success-screen" id="successScreen" aria-live="polite">
+        <div class="success-card">
+          <div class="success-mark" aria-hidden="true">✓</div>
+          <h2>Details Submitted</h2>
+          <p>The teacher information has been saved successfully.</p>
+          <button class="btn primary" type="button" id="submitAnother">Submit Another Response</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="loading-overlay" id="loadingOverlay" role="status" aria-live="polite" aria-hidden="true">
+    <div class="loading-card">
+      <div class="spinner" aria-hidden="true"></div>
+      <strong>Submitting details</strong>
+      <span>Please wait while the information is saved.</span>
     </div>
   </div>
 
@@ -381,6 +497,10 @@
     const GOOGLE_SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxRe3O-8tUSLZBVD8ltg6d1NAxl7BjcdUrQ_0LCLpliw6m2Xxreq2AaC0XlPwLl5rwcWQ/exec";
     const form = document.querySelector("#teacherForm");
     const statusText = document.querySelector("#statusText");
+    const loadingOverlay = document.querySelector("#loadingOverlay");
+    const successScreen = document.querySelector("#successScreen");
+    const submitAnother = document.querySelector("#submitAnother");
+    const submitButton = document.querySelector("#submitButton");
     const fields = [
       "fullName",
       "mobile",
@@ -398,6 +518,27 @@
     function setStatus(message, type) {
       statusText.textContent = message;
       statusText.className = type ? `status ${type}` : "status";
+    }
+
+    function setLoading(isLoading) {
+      loadingOverlay.classList.toggle("active", isLoading);
+      loadingOverlay.setAttribute("aria-hidden", String(!isLoading));
+      submitButton.disabled = isLoading;
+      Array.from(form.elements).forEach((element) => {
+        element.disabled = isLoading;
+      });
+    }
+
+    function showSuccessScreen() {
+      form.style.display = "none";
+      successScreen.classList.add("active");
+      submitAnother.focus();
+    }
+
+    function showForm() {
+      successScreen.classList.remove("active");
+      form.style.display = "";
+      form.elements.fullName.focus();
     }
 
     function getFormData() {
@@ -460,7 +601,8 @@
         return;
       }
 
-      setStatus("Submitting details...", "");
+      setStatus("", "");
+      setLoading(true);
 
       try {
         await fetch(endpoint, {
@@ -474,11 +616,18 @@
 
         form.reset();
         window.setTimeout(() => {
-          setStatus("Submitted successfully.", "success");
+          setLoading(false);
+          showSuccessScreen();
         }, 0);
       } catch (error) {
+        setLoading(false);
         setStatus("Submission failed. Check the Web App URL and deployment access.", "error");
       }
+    });
+
+    submitAnother.addEventListener("click", () => {
+      setStatus("", "");
+      showForm();
     });
   </script>
 </body>
